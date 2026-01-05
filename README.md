@@ -1,64 +1,84 @@
+
 # Django Chat Backend
 
-Полноценный backend для мессенджера на Django с поддержкой WebSocket, JWT авторизации, real-time сообщений и всех необходимых функций.
+Backend для мессенджера на Django с поддержкой WebSocket, JWT-авторизации и real-time обмена сообщениями.  
+Проект собран как production-ready пример архитектуры Django + Channels.
 
-## 🚀 Технологии
+Подходит для pet-проекта, портфолио и демонстрации навыков backend-разработки.
 
-- **Django 5.2** - основной фреймворк
-- **Django REST Framework** - REST API
-- **Django Channels** - WebSocket поддержка
-- **PostgreSQL** - база данных
-- **Redis** - для Channels
-- **JWT** - авторизация
-- **Swagger** - документация API
-- **Docker** - контейнеризация
+---
 
-## ✨ Функционал
+## Стек
 
-- ✅ JWT авторизация (login/refresh)
-- ✅ Private и Group чаты
-- ✅ Real-time сообщения через WebSocket
-- ✅ Статусы сообщений (delivered/read)
-- ✅ Online/Offline статусы пользователей
-- ✅ Typing indicator
-- ✅ Forward messages
-- ✅ Edit/Delete сообщений
-- ✅ Pinned messages
-- ✅ Поиск сообщений
-- ✅ Unread counters
-- ✅ Swagger документация
+- Python 3.11
+- Django 5.2
+- Django REST Framework
+- Django Channels (ASGI / WebSocket)
+- PostgreSQL
+- Redis
+- JWT (SimpleJWT)
+- Swagger / OpenAPI
+- Docker, Docker Compose
+- GitHub Actions (CI)
 
-## 📁 Структура проекта
+---
+
+## Функциональность
+
+- JWT авторизация (access / refresh)
+- Private и group чаты
+- Real-time сообщения через WebSocket
+- Online / offline статус пользователей
+- Typing indicator
+- Read / delivered статусы сообщений
+- Unread счётчики по чатам
+- Пересылка сообщений
+- Редактирование и удаление сообщений
+- Закреплённые сообщения
+- Поиск по сообщениям
+- Swagger документация API
+
+---
+
+## Структура проекта
 
 ```
+
 backend/
-├── backend/          # Основные настройки Django
-│   ├── settings.py   # Конфигурация
-│   ├── asgi.py       # ASGI для WebSocket
-│   ├── urls.py       # URL маршруты
-│   ├── routing.py    # WebSocket маршруты
-│   ├── middleware.py # JWT middleware для WS
-│   └── jwt_middleware.py
-├── users/            # Пользователи и статусы
-├── chats/            # Чаты и read states
-├── chat_messages/   # Сообщения, статусы, pinned
+├── backend/
+│   ├── settings.py
+│   ├── asgi.py
+│   ├── urls.py
+│   ├── routing.py
+│   ├── jwt_middleware.py
+│   └── middleware.py
+├── users/            # Пользователи и online/offline статус
+├── chats/            # Чаты и состояния прочтения
+├── chat_messages/    # Сообщения, статусы, pinned, forward
 └── manage.py
-```
 
-## 🛠 Установка и запуск
+````
 
-### 1. Клонируйте репозиторий
+---
+
+## Запуск через Docker
+
+### 1. Клонирование репозитория
 
 ```bash
-git clone <your-repo>
+git clone <repo-url>
 cd DjangoProject
-```
+````
 
-### 2. Создайте .env файл
+---
+
+### 2. Переменные окружения
+
+Создайте файл `.env` в корне проекта:
 
 ```env
 DEBUG=1
-SECRET_KEY=your-secret-key-here
+SECRET_KEY=your-secret-key
 ALLOWED_HOSTS=*
 
 DB_NAME=chat
@@ -71,86 +91,94 @@ REDIS_HOST=redis
 REDIS_PORT=6379
 ```
 
-### 3. Запустите через Docker
+---
+
+### 3. Запуск
 
 ```bash
-docker compose down -v  # Очистить старые данные (опционально)
+docker compose down -v
 docker compose up --build
 ```
 
-**Важно:** Backend автоматически:
-- ✅ Ждет готовности PostgreSQL (healthcheck)
-- ✅ Ждет готовности Redis
-- ✅ Выполняет миграции автоматически
-- ✅ Запускает сервер
+При запуске backend автоматически:
 
-### 4. Создайте суперпользователя
+* ждёт готовности PostgreSQL
+* ждёт готовности Redis
+* применяет миграции
+* запускает ASGI сервер (Daphne)
 
-В новом терминале:
+---
+
+### 4. Создание суперпользователя
 
 ```bash
 docker compose exec backend python manage.py createsuperuser
 ```
 
-📖 **Подробнее:** См. [START_BACKEND.md](START_BACKEND.md) для детальных инструкций
+---
 
-## 📡 API Endpoints
+## Доступные сервисы
 
-### Авторизация
+* Admin panel: [http://localhost:8000/admin/](http://localhost:8000/admin/)
+* Swagger UI: [http://localhost:8000/api/docs/](http://localhost:8000/api/docs/)
+* OpenAPI schema: [http://localhost:8000/api/schema/](http://localhost:8000/api/schema/)
 
-- `POST /api/auth/login/` - Получить JWT токен
-- `POST /api/auth/refresh/` - Обновить токен
+---
 
-### Чаты
+## JWT авторизация
 
-- `GET /api/chats/` - Список чатов пользователя
-- `POST /api/chats/` - Создать чат
-- `GET /api/chats/{id}/` - Детали чата
-- `PUT /api/chats/{id}/` - Обновить чат
-- `DELETE /api/chats/{id}/` - Удалить чат
+### Получение токена
 
-### Сообщения
+```http
+POST /api/auth/login/
+```
 
-- `GET /api/messages/?chat={chat_id}` - Получить сообщения чата
-- `POST /api/messages/` - Отправить сообщение
-- `PUT /api/messages/{id}/` - Редактировать сообщение
-- `DELETE /api/messages/{id}/` - Удалить сообщение
-- `GET /api/messages/search/?q={query}` - Поиск сообщений
+```json
+{
+  "username": "user",
+  "password": "password"
+}
+```
 
-### Pinned Messages
+Ответ:
 
-- `GET /api/pinned/?chat={chat_id}` - Закрепленные сообщения
-- `POST /api/pinned/` - Закрепить сообщение
-- `DELETE /api/pinned/{id}/` - Открепить сообщение
+```json
+{
+  "access": "jwt-access-token",
+  "refresh": "jwt-refresh-token"
+}
+```
 
-### Пользователи
+Использование access-токена:
 
-- `GET /api/users/` - Список пользователей
-- `GET /api/users/me/` - Текущий пользователь
+```
+Authorization: Bearer <access_token>
+```
 
-### Документация
+---
 
-- `GET /api/docs/` - Swagger UI
-- `GET /api/schema/` - OpenAPI схема
-
-## 🔌 WebSocket
+## WebSocket
 
 ### Подключение
 
 ```
-ws://localhost:8000/ws/chat/{chat_id}/?token={jwt_token}
+ws://localhost:8000/ws/chat/{chat_id}/?token={JWT}
 ```
 
-### Отправка сообщений
+---
+
+### События клиента
+
+Отправка сообщения:
 
 ```json
 {
   "type": "message",
-  "text": "Привет!"
+  "text": "Hello"
 }
 ```
 
-### Typing indicator
+Typing indicator:
 
 ```json
 {
@@ -159,7 +187,7 @@ ws://localhost:8000/ws/chat/{chat_id}/?token={jwt_token}
 }
 ```
 
-### Отметить прочитанным
+Read:
 
 ```json
 {
@@ -168,7 +196,7 @@ ws://localhost:8000/ws/chat/{chat_id}/?token={jwt_token}
 }
 ```
 
-### Переслать сообщение
+Forward:
 
 ```json
 {
@@ -178,17 +206,17 @@ ws://localhost:8000/ws/chat/{chat_id}/?token={jwt_token}
 }
 ```
 
-### Редактировать сообщение
+Edit:
 
 ```json
 {
   "type": "edit",
   "message_id": 42,
-  "text": "Новый текст"
+  "text": "Updated text"
 }
 ```
 
-### Удалить сообщение
+Delete:
 
 ```json
 {
@@ -197,27 +225,33 @@ ws://localhost:8000/ws/chat/{chat_id}/?token={jwt_token}
 }
 ```
 
-### Получение событий
+---
+
+### События сервера
+
+Новое сообщение:
 
 ```json
 {
   "type": "message",
   "message_id": 123,
-  "text": "Привет!",
+  "text": "Hello",
   "sender": "username",
-  "sender_id": 1,
   "created_at": "2024-01-01T12:00:00Z"
 }
 ```
+
+Typing:
 
 ```json
 {
   "type": "typing",
   "user_id": 2,
-  "username": "user2",
   "is_typing": true
 }
 ```
+
+Read:
 
 ```json
 {
@@ -227,6 +261,8 @@ ws://localhost:8000/ws/chat/{chat_id}/?token={jwt_token}
 }
 ```
 
+Online / offline:
+
 ```json
 {
   "type": "user_status",
@@ -235,119 +271,67 @@ ws://localhost:8000/ws/chat/{chat_id}/?token={jwt_token}
 }
 ```
 
-## 🔐 JWT Авторизация
+---
 
-### Получение токена
-
-```bash
-curl -X POST http://localhost:8000/api/auth/login/ \
-  -H "Content-Type: application/json" \
-  -d '{"username": "user", "password": "pass"}'
-```
-
-Ответ:
-```json
-{
-  "access": "eyJ0eXAiOiJKV1QiLCJhbGc...",
-  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc..."
-}
-```
-
-### Использование токена
+## Тестирование
 
 ```bash
-curl -X GET http://localhost:8000/api/chats/ \
-  -H "Authorization: Bearer {access_token}"
+docker compose exec backend python manage.py test
 ```
 
-## 🧪 Тестирование
+---
+
+## Миграции
 
 ```bash
-docker exec -it djangoproject-backend-1 python manage.py test
+docker compose exec backend python manage.py makemigrations
+docker compose exec backend python manage.py migrate
 ```
 
-## 📝 Миграции
+---
 
-```bash
-# Создать миграции
-docker exec -it djangoproject-backend-1 python manage.py makemigrations
+## Локальный запуск без Docker
 
-# Применить миграции
-docker exec -it djangoproject-backend-1 python manage.py migrate
-```
-
-## 🏗 Разработка
-
-### Локальная разработка без Docker
-
-1. Установите зависимости:
 ```bash
 pip install -r requirements.txt
-```
-
-2. Настройте PostgreSQL и Redis локально
-
-3. Запустите миграции:
-```bash
 python backend/manage.py migrate
-```
-
-4. Запустите сервер:
-```bash
 python backend/manage.py runserver
 ```
 
-5. Запустите Daphne для WebSocket:
+Для WebSocket:
+
 ```bash
 daphne -b 0.0.0.0 -p 8000 backend.asgi:application
 ```
 
-## 📚 Модели данных
+---
 
-### User
-- Стандартные поля Django User
-- Связан с UserStatus
+## CI
 
-### UserStatus
-- `is_online` - онлайн статус
-- `last_seen` - последний раз онлайн
+В проекте настроен GitHub Actions CI:
 
-### Chat
-- `type` - private/group
-- `name` - название (опционально для private)
-- `members` - участники (M2M)
+* PostgreSQL и Redis через services
+* применение миграций
+* Django system check
 
-### ChatReadState
-- `chat` - чат
-- `user` - пользователь
-- `last_read_message_id` - последнее прочитанное сообщение
+---
 
-### Message
-- `chat` - чат
-- `sender` - отправитель
-- `text` - текст
-- `forwarded_from` - оригинальное сообщение (для пересылки)
-- `is_edited` - редактировано
-- `is_deleted` - удалено
+## Production заметки
 
-### MessageStatus
-- `message` - сообщение
-- `user` - пользователь
-- `delivered` - доставлено
-- `read` - прочитано
+* DEBUG должен быть выключен
+* SECRET_KEY хранить в переменных окружения
+* ALLOWED_HOSTS настроить явно
+* использовать Nginx как reverse proxy
+* включить HTTPS
+* разделить dev и prod конфигурации
 
-### PinnedMessage
-- `chat` - чат
-- `message` - сообщение
-- `pinned_by` - кто закрепил
+---
 
-## 🚀 Production
+## Архитектурные моменты
 
-Для production:
-
-1. Измените `DEBUG=0` в `.env`
-2. Установите надежный `SECRET_KEY`
-3. Настройте `ALLOWED_HOSTS`
-4. Используйте Nginx как reverse proxy
-5. Настройте SSL сертификаты
-6. Используйте production-ready настройки PostgreSQL и Redis
+* ASGI + Channels
+* JWT авторизация для WebSocket
+* Явный `django.setup()` для Django 5.x
+* Lazy imports в consumers
+* Автоматический старт через entrypoint
+* Custom User модель
