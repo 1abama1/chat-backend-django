@@ -125,31 +125,86 @@ docker compose exec backend python manage.py createsuperuser
 
 ---
 
-## JWT авторизация
+## Authentication
 
-### Получение токена
+### Login
 
-```http
 POST /api/auth/login/
-```
 
+Request body:
 ```json
 {
-  "username": "user",
-  "password": "password"
+  "username": "string",
+  "password": "string"
 }
 ```
 
-Ответ:
+Response:
 
 ```json
 {
-  "access": "jwt-access-token",
-  "refresh": "jwt-refresh-token"
+  "access": "string",
+  "refresh": "string"
 }
 ```
 
-Использование access-токена:
+---
+
+### Refresh token
+
+POST /api/auth/refresh/
+
+Request body:
+
+```json
+{
+  "refresh": "string"
+}
+```
+
+Response:
+
+```json
+{
+  "access": "string"
+}
+```
+
+---
+
+### Registration
+
+POST /api/auth/register/
+
+Request body:
+
+```json
+{
+  "username": "string",
+  "email": "string",
+  "password": "string"
+}
+```
+
+Response:
+
+```json
+{
+  "user": {
+    "id": 1,
+    "username": "string",
+    "email": "string"
+  },
+  "access": "string",
+  "refresh": "string"
+}
+```
+
+После регистрации пользователь считается авторизованным — повторный login не требуется.
+
+---
+
+### Использование access-токена
 
 ```
 Authorization: Bearer <access_token>
