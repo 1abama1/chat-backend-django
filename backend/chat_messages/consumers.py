@@ -12,7 +12,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
 
-        # Проверяем, что пользователь является участником чата
         is_member = await self.check_membership()
         if not is_member:
             await self.close()
@@ -158,7 +157,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "is_online": event["is_online"],
         }))
 
-    # Database operations
     @database_sync_to_async
     def check_membership(self):
         from chats.models import Chat
@@ -173,7 +171,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             text=text
         )
 
-        # Создаем статусы delivered для всех кроме отправителя
         members = message.chat.members.exclude(id=self.user.id)
         for user in members:
             MessageStatus.objects.create(
@@ -201,7 +198,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             state.last_read_message_id = last_id
             state.save(update_fields=['last_read_message_id'])
 
-            # Обновляем MessageStatus
             MessageStatus.objects.filter(
                 message__chat_id=self.chat_id,
                 message_id__lte=last_id,

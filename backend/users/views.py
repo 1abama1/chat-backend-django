@@ -30,8 +30,6 @@ class RegisterView(APIView):
             201: RegisterResponseSerializer,
             400: OpenApiResponse(description="Validation error"),
         },
-        summary="Register a new user",
-        description="Creates a new user and returns JWT access and refresh tokens.",
         tags=["auth"],
     )
     def post(self, request):

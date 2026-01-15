@@ -24,6 +24,20 @@ class Message(models.Model):
     def __str__(self):
         return f"{self.sender.username}: {self.text[:50]}"
 
+    def to_dict(self):
+        text = "Message deleted" if self.is_deleted else self.text
+        
+        return {
+            "id": self.id,
+            "sender": {
+                "id": self.sender.id,
+                "username": self.sender.username,
+            },
+            "text": text,
+            "is_edited": self.is_edited,
+            "created_at": self.created_at.isoformat(),
+        }
+
 class MessageStatus(models.Model):
     message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="statuses")
     user = models.ForeignKey(User, on_delete=models.CASCADE)

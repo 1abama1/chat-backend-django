@@ -1,41 +1,36 @@
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 from .models import Chat
-from users.models import User
-from chat_messages.models import Message
 
-class ChatSerializer(serializers.ModelSerializer):
-    members = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
-        many=True
+User = get_user_model()
+
+
+class ChatCreateSerializer(serializers.Serializer):
+    type = serializers.ChoiceField(choices=[("private", "Private"), ("group", "Group")])
+    user_id = serializers.IntegerField(required=False)
+    name = serializers.CharField(required=False)
+    member_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        required=False
     )
 
-    class Meta:
-        model = Chat
-        fields = ['id', 'type', 'name', 'members', 'created_at']
+    def validate(self, data):
+        chat_type = data["type"]
 
-class ChatListSerializer(ChatSerializer):
-    unread_count = serializers.SerializerMethodField()
-    last_message = serializers.SerializerMethodField()
+        if chat_type == Chat.Type.PRIVATE:
+            if "user_id" not in data:
+                raise serializers.ValidationError(
+                    {"user_id": "Required for private chat"}
+                )
 
-    class Meta(ChatSerializer.Meta):
-        fields = ChatSerializer.Meta.fields + ['unread_count', 'last_message']
+        if chat_type == Chat.Type.GROUP:
+            if not data.get("name"):
+                raise serializers.ValidationError(
+                    {"name": "Required for group chat"}
+                )
+            if not data.get("member_ids"):
+                raise serializers.ValidationError(
+                    {"member_ids": "Required for group chat"}
+                )
 
-    def get_unread_count(self, chat):
-        user = self.context['request'].user
-        state = chat.read_states.filter(user=user).first()
-        last_read = state.last_read_message_id if state else 0
-
-        return Message.objects.filter(
-            chat=chat,
-            id__gt=last_read
-        ).exclude(sender=user).count()
-
-    def get_last_message(self, chat):
-        msg = chat.messages.order_by('-id').first()
-        return {
-            'id': msg.id,
-            'text': msg.text,
-            'sender': msg.sender.username,
-            'created_at': msg.created_at
-        } if msg else None
-
+        return data
